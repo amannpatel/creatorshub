@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme";
 import {
   Briefcase,
   Building2,
@@ -42,11 +42,7 @@ export function CommandPalette() {
 
   useEffect(() => {
     const q = query.trim();
-    if (!q) {
-      setHits([]);
-      return;
-    }
-    setLoading(true);
+    if (!q) return;
     const t = setTimeout(() => {
       searchEverything(q)
         .then(setHits)
@@ -55,6 +51,16 @@ export function CommandPalette() {
     }, 180);
     return () => clearTimeout(t);
   }, [query]);
+
+  function onQueryChange(value: string) {
+    setQuery(value);
+    if (value.trim()) {
+      setLoading(true);
+    } else {
+      setHits([]);
+      setLoading(false);
+    }
+  }
 
   const actions = useMemo(
     () => [
@@ -80,7 +86,7 @@ export function CommandPalette() {
 
   function close() {
     ui.setCommand(false);
-    setQuery("");
+    onQueryChange("");
   }
   function go(href: string) {
     close();
@@ -90,7 +96,7 @@ export function CommandPalette() {
   return (
     <CommandDialog open={ui.command} onOpenChange={(o) => (o ? ui.setCommand(true) : close())} title="Search" description="Search collaborations, brands and tasks">
       <Command shouldFilter={false}>
-        <CommandInput placeholder="Search brands, campaigns, contacts, notes…" value={query} onValueChange={setQuery} />
+        <CommandInput placeholder="Search brands, campaigns, contacts, notes…" value={query} onValueChange={onQueryChange} />
         <CommandList>
           <CommandEmpty>{loading ? "Searching…" : "No results."}</CommandEmpty>
           {hits.length > 0 && (

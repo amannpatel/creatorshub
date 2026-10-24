@@ -37,16 +37,16 @@ export function CalendarView({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" render={<Link href={`/calendar?m=${addMonths(anchor, -1).slice(0, 7)}`} aria-label="Previous month" />}>
+          <Button variant="outline" size="icon" nativeButton={false} render={<Link href={`/calendar?m=${addMonths(anchor, -1).slice(0, 7)}`} aria-label="Previous month" />}>
             <ChevronLeft />
           </Button>
-          <Button variant="outline" size="icon" render={<Link href={`/calendar?m=${addMonths(anchor, 1).slice(0, 7)}`} aria-label="Next month" />}>
+          <Button variant="outline" size="icon" nativeButton={false} render={<Link href={`/calendar?m=${addMonths(anchor, 1).slice(0, 7)}`} aria-label="Next month" />}>
             <ChevronRight />
           </Button>
         </div>
         <h2 className="text-lg font-semibold">{formatDateOnly(anchor, "month")}</h2>
         {!today.startsWith(month) && (
-          <Button variant="ghost" size="sm" render={<Link href="/calendar" />}>
+          <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/calendar" />}>
             Today
           </Button>
         )}

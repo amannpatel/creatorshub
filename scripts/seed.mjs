@@ -56,7 +56,9 @@ try {
   ];
   const brands = {};
   for (const b of brandsSpec) {
-    const doc = await Brand.create({ ...b, userId, nameKey: key(b.name), phone: "", website: "", notes: "", isSample: true });
+    // Reuse a real brand with the same name instead of creating a duplicate.
+    const existing = await Brand.findOne({ userId, nameKey: key(b.name) }, { _id: 1 }).lean();
+    const doc = existing ?? (await Brand.create({ ...b, userId, nameKey: key(b.name), phone: "", website: "", notes: "", isSample: true }));
     brands[b.name] = doc._id;
   }
 

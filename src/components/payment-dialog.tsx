@@ -17,29 +17,35 @@ import type { CollabOption } from "@/lib/types";
 
 export function PaymentDialog() {
   const ui = useAppUI();
-  const { open, payment, collaborationId } = ui.payment;
+  const { open, payment } = ui.payment;
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && ui.close("payment")}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{payment ? "Edit payment" : "Record payment"}</DialogTitle>
+          <DialogDescription>Tracks money you&apos;ve received — no payment is processed.</DialogDescription>
+        </DialogHeader>
+        {open && <PaymentForm key={payment?.id ?? "new"} />}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PaymentForm() {
+  const ui = useAppUI();
+  const { payment, collaborationId } = ui.payment;
   const { pending, run } = useServerAction();
   const [options, setOptions] = useState<CollabOption[] | null>(null);
-  const [form, setForm] = useState({
-    collaborationId: "",
-    amount: "",
-    receivedOn: "",
-    method: "bank_transfer" as PaymentMethod,
-    reference: "",
-    notes: "",
-  });
+  const [form, setForm] = useState(() => ({
+    collaborationId: payment?.collaborationId ?? collaborationId ?? "",
+    amount: payment ? minorToInputString(payment.amountMinor) : "",
+    receivedOn: payment?.receivedOn ?? ui.today,
+    method: (payment?.method ?? "bank_transfer") as PaymentMethod,
+    reference: payment?.reference ?? "",
+    notes: payment?.notes ?? "",
+  }));
 
   useEffect(() => {
-    if (!open) return;
-    setOptions(null);
-    setForm({
-      collaborationId: payment?.collaborationId ?? collaborationId ?? "",
-      amount: payment ? minorToInputString(payment.amountMinor) : "",
-      receivedOn: payment?.receivedOn ?? ui.today,
-      method: payment?.method ?? "bank_transfer",
-      reference: payment?.reference ?? "",
-      notes: payment?.notes ?? "",
-    });
     listCollabOptions()
       .then((opts) => {
         setOptions(opts);
@@ -52,7 +58,7 @@ export function PaymentDialog() {
         }
       })
       .catch(() => setOptions([]));
-  }, [open, payment, collaborationId, ui.today]);
+  }, [payment, collaborationId]);
 
   const selected = options?.find((o) => o.id === form.collaborationId);
 
@@ -65,13 +71,7 @@ export function PaymentDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && ui.close("payment")}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{payment ? "Edit payment" : "Record payment"}</DialogTitle>
-          <DialogDescription>Tracks money you&apos;ve received — no payment is processed.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="space-y-4">
           <FormField label="Collaboration *" htmlFor="pay-collab">
             <NativeSelect
               id="pay-collab"
@@ -126,8 +126,6 @@ export function PaymentDialog() {
               {payment ? "Save" : "Record payment"}
             </Button>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </form>
   );
 }

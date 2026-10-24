@@ -139,10 +139,11 @@ export default async function CollaborationPage({ params }: { params: Promise<{ 
                     <dt className="text-xs text-muted-foreground">Payment due</dt>
                     <dd className="flex flex-wrap items-center gap-1">
                       {c.paymentDueDate ? (
-                        <>
-                          {formatDateOnly(c.paymentDueDate, "short")}
-                          {payment.outstandingMinor > 0 && <DueChip date={c.paymentDueDate} today={today} />}
-                        </>
+                        payment.outstandingMinor > 0 ? (
+                          <DueChip date={c.paymentDueDate} today={today} />
+                        ) : (
+                          formatDateOnly(c.paymentDueDate, "short")
+                        )
                       ) : (
                         <span className="text-muted-foreground">Not set</span>
                       )}

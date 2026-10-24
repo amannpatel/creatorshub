@@ -34,13 +34,13 @@ export default async function SettingsPage() {
       <Section title="Your data">
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" render={<a href="/api/export?format=json" download />}>
+            <Button variant="outline" nativeButton={false} render={<a href="/api/export?format=json" download />}>
               <Download /> Export everything (JSON)
             </Button>
-            <Button variant="outline" render={<a href="/api/export?format=csv" download />}>
+            <Button variant="outline" nativeButton={false} render={<a href="/api/export?format=csv" download />}>
               <Download /> Collaborations (CSV)
             </Button>
-            <Button variant="outline" render={<a href="/api/export?format=payments-csv" download />}>
+            <Button variant="outline" nativeButton={false} render={<a href="/api/export?format=payments-csv" download />}>
               <Download /> Payments (CSV)
             </Button>
           </div>

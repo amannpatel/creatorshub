@@ -18,22 +18,37 @@ import type { CollabOption } from "@/lib/types";
 
 export function TaskDialog() {
   const ui = useAppUI();
-  const { open, task, collaborationId } = ui.task;
+  const { open, task } = ui.task;
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && ui.close("task")}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{task ? "Edit task" : "New task"}</DialogTitle>
+        </DialogHeader>
+        {open && <TaskForm key={task?.id ?? "new"} />}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TaskForm() {
+  const ui = useAppUI();
+  const { task, collaborationId } = ui.task;
   const { pending, run } = useServerAction();
   const [options, setOptions] = useState<CollabOption[]>([]);
-  const [form, setForm] = useState({ title: "", dueDate: "", priority: "medium" as TaskPriority, notes: "", collaborationId: "" });
+  const [form, setForm] = useState(() => ({
+    title: task?.title ?? "",
+    dueDate: task?.dueDate ?? (task ? "" : ui.today),
+    priority: (task?.priority ?? "medium") as TaskPriority,
+    notes: task?.notes ?? "",
+    collaborationId: collaborationId ?? "",
+  }));
 
   useEffect(() => {
-    if (!open) return;
-    setForm({
-      title: task?.title ?? "",
-      dueDate: task?.dueDate ?? (task ? "" : ui.today),
-      priority: task?.priority ?? "medium",
-      notes: task?.notes ?? "",
-      collaborationId: collaborationId ?? "",
-    });
-    listCollabOptions().then(setOptions).catch(() => setOptions([]));
-  }, [open, task, collaborationId, ui.today]);
+    listCollabOptions()
+      .then(setOptions)
+      .catch(() => setOptions([]));
+  }, []);
 
   const quickDates = [
     { label: "Today", value: ui.today },
@@ -51,12 +66,7 @@ export function TaskDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && ui.close("task")}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{task ? "Edit task" : "New task"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="space-y-4">
           <FormField label="Task *" htmlFor="task-title">
             <Input id="task-title" autoFocus required maxLength={200} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Send script draft to Nike" />
           </FormField>
@@ -111,8 +121,6 @@ export function TaskDialog() {
               {task ? "Save" : "Add task"}
             </Button>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </form>
   );
 }

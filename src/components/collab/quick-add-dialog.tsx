@@ -65,11 +65,27 @@ function valuesFromExtraction(x: ExtractionResult, currency: string): CollabForm
 
 export function QuickAddDialog() {
   const ui = useAppUI();
+  const { open } = ui.quickAdd;
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && ui.close("quickAdd")}>
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>New collaboration</DialogTitle>
+          <DialogDescription>Only the brand is required — fill in the rest whenever you like.</DialogDescription>
+        </DialogHeader>
+        {open && <QuickAddBody />}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function QuickAddBody() {
+  const ui = useAppUI();
   const router = useRouter();
   const { pending, run } = useServerAction();
-  const [tab, setTab] = useState<"quick" | "paste">("quick");
+  const [tab, setTab] = useState<"quick" | "paste">(ui.quickAdd.tab);
   const [brands, setBrands] = useState<string[]>([]);
-  const [reqId, setReqId] = useState(requestId);
+  const [reqId] = useState(requestId);
   const [duplicate, setDuplicate] = useState<{ id: string; message: string } | null>(null);
 
   // Quick add state
@@ -83,28 +99,14 @@ export function QuickAddDialog() {
   const [keepActions, setKeepActions] = useState(true);
   const [keepOriginal, setKeepOriginal] = useState(false);
 
-  const { open } = ui.quickAdd;
   useEffect(() => {
-    if (!open) return;
-    setTab(ui.quickAdd.tab);
-    listBrandNames().then(setBrands).catch(() => setBrands([]));
-  }, [open, ui.quickAdd.tab]);
-
-  function reset() {
-    setQuick({ brandName: "", title: "", amount: "", currency: ui.currency, status: "new_lead", responseDeadline: "", submissionDeadline: "", platforms: [], deliverables: [] });
-    setMore(false);
-    setRaw("");
-    setExtracted(null);
-    setReview(null);
-    setDuplicate(null);
-    setReqId(requestId());
-  }
+    listBrandNames()
+      .then(setBrands)
+      .catch(() => setBrands([]));
+  }, []);
 
   function onOpenChange(next: boolean) {
-    if (!next) {
-      ui.close("quickAdd");
-      reset();
-    }
+    if (!next) ui.close("quickAdd");
   }
 
   function save(input: CollabInput, allowDuplicate: boolean, navigate: boolean) {
@@ -175,7 +177,7 @@ export function QuickAddDialog() {
         {duplicate.message}
       </span>
       <div className="flex shrink-0 gap-2">
-        <Button size="sm" variant="outline" render={<Link href={`/collaborations/${duplicate.id}`} onClick={() => onOpenChange(false)} />}>
+        <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/collaborations/${duplicate.id}`} onClick={() => onOpenChange(false)} />}>
           Open existing
         </Button>
         <Button size="sm" onClick={() => (tab === "quick" ? saveQuick(true) : savePasted(true))} disabled={pending}>
@@ -186,12 +188,6 @@ export function QuickAddDialog() {
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>New collaboration</DialogTitle>
-          <DialogDescription>Only the brand is required — fill in the rest whenever you like.</DialogDescription>
-        </DialogHeader>
         <Tabs value={tab} onValueChange={(v) => { setTab(v as "quick" | "paste"); setDuplicate(null); }}>
           <TabsList className="w-full">
             <TabsTrigger value="quick">
@@ -358,7 +354,5 @@ export function QuickAddDialog() {
             )}
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
   );
 }
