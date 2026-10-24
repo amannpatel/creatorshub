@@ -216,8 +216,10 @@ export function findAmounts(text: string): FoundAmount[] {
     const start = m.index + m[0].length;
     if (out.some((a) => Math.abs(a.index - (start - 20)) < 30)) continue;
     const base = parseAmountToMinor(m[2]);
-    if (base === null || base < 100_00) continue; // ignore tiny numbers like "fee for 2 reels"
-    out.push({ minor: base * multiplier(m[3]), currency: null, index: m.index, hinted: true });
+    if (base === null) continue;
+    const total = base * multiplier(m[3]);
+    if (total < 100_00) continue; // ignore tiny numbers like "fee for 2 reels"
+    out.push({ minor: total, currency: null, index: m.index, hinted: true });
   }
   return out.filter((a) => a.minor > 0);
 }
@@ -308,7 +310,7 @@ function brandFromDomain(email: string | null): string | null {
 }
 
 function findBrand(text: string, email: string | null): string | null {
-  const cap = "([A-Z][\\w&.'’-]*(?:\\s+(?:&\\s+)?[A-Z][\\w&.'’-]*){0,3})";
+  const cap = "([A-Z][\\w&'’-]*(?:\\s+(?:&\\s+)?[A-Z][\\w&'’-]*){0,3})";
   const patterns = [
     new RegExp(`\\b(?:on behalf of|representing|brand partnerships? (?:at|for)|marketing (?:team )?(?:at|for)|reaching out from)\\s+${cap}`),
     new RegExp(`\\b(?:I am|I'm|this is)\\s+[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)?\\s*(?:,\\s*[\\w\\s]+?\\s*)?(?:from|at|with)\\s+${cap}`),

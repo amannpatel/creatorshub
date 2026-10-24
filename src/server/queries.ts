@@ -39,7 +39,7 @@ async function base(user: SessionUser) {
 }
 
 /** Collaborations that can still need attention (open, or completed with money outstanding). */
-const attentionFilter = (userId: mongoose.Types.ObjectId) => ({
+const attentionFilter = (userId: mongoose.Types.ObjectId): Record<string, unknown> => ({
   userId,
   $or: [
     { status: { $nin: ["completed", "cancelled"] } },

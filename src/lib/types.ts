@@ -134,6 +134,14 @@ export type ActivityKind =
   | "task"
   | "updated";
 
+export interface CollabOption {
+  id: string;
+  label: string;
+  status: string;
+  currency: string;
+  outstandingMinor: number;
+}
+
 export interface SearchHit {
   id: string;
   kind: "collaboration" | "brand" | "task";

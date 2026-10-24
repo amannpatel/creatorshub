@@ -20,14 +20,17 @@ import {
 } from "@/lib/automation";
 import {
   COLLAB_STATUSES,
+  DATE_FIELDS,
+  DATE_FIELD_LABEL,
   DELIVERABLE_STATUSES,
   DELIVERABLE_STATUS_META,
   STATUS_META,
   type CollabStatus,
+  type DateField,
   type DeliverableStatus,
 } from "@/lib/constants";
 import { addDays, todayIn } from "@/lib/dates";
-import { collabInput, createCollabInput, deliverableInput } from "@/lib/validation";
+import { collabInput, createCollabInput, dateOnlyField, deliverableInput } from "@/lib/validation";
 import type { ActionResult, SessionUser } from "@/lib/types";
 import { z } from "zod";
 
@@ -203,6 +206,28 @@ export async function deleteCollaboration(id: string): Promise<ActionResult> {
 }
 
 const noteSchema = z.string().trim().min(1, "Write something first").max(2000);
+
+const datesPatch = z.object(Object.fromEntries(DATE_FIELDS.map((f) => [f, dateOnlyField.optional()]))).strict();
+
+export async function updateCollabDates(id: string, raw: unknown): Promise<ActionResult> {
+  const parsed = datesPatch.safeParse(raw);
+  if (!parsed.success) return validationError(parsed.error);
+  try {
+    const { userId } = await ctx();
+    const doc = await loadOwned(userId, id);
+    if (!doc) return { ok: false, error: "Collaboration not found." };
+    const patch = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== undefined));
+    if (!Object.keys(patch).length) return { ok: true };
+    doc.set(patch);
+    await doc.save();
+    const labels = Object.entries(patch).map(([k, v]) => `${DATE_FIELD_LABEL[k as DateField]}: ${v ?? "cleared"}`);
+    await logActivity(userId, doc._id, "updated", labels.join(" · "));
+    revalidateApp();
+    return { ok: true };
+  } catch (err) {
+    return serverError(err, "updateCollabDates");
+  }
+}
 
 export async function addCollabNote(id: string, note: string): Promise<ActionResult> {
   const parsed = noteSchema.safeParse(note);
